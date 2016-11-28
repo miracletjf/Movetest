@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+	<title>电影接口</title>
+	<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="js/template.js"></script>
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+
+
+<body>
+<div class="wrap">
+	<div class="top" id="top">排行榜</div>
+	<div class="content" id="content"></div>
+	<div class="bot-add" id="down_refash" style="display: none;">加载中...</div>
+</div>
+
+<script type="text/html" id="item">
+{{each subjects as move}}
+	<a class="item" href="detaile.html?id={{move.id}}">
+		<div class="img-wrap">
+			<img src="{{move.images.small}}">
+		</div>
+		<div class="text-box">
+			<div class="title">
+				{{move.title}}
+			</div>
+			<div class="starts">
+				{{move.rating.average}}
+			</div>
+			<div class="text">
+				<span class="text-left">导演：</span>
+				<div class="text-right">
+					<span class="hum">{{move.directors[0].name}}</span>
+				</div>
+			</div>
+			<div class="text">
+				<span class="text-left">演员：</span>
+				<div class="text-right">
+				{{each move.casts as cast}}
+					<span class="hum">{{cast.name}}</span>
+				{{/each}}
+				</div>
+
+			</div>
+		</div>
+	</a>
+{{/each}}	
+</script>
+
+<script type="text/javascript">
+	var start = 0;//数据请求开始的下标
+	var count = 0;//数据请求数量
+	var times = 0;//回调触发次数
+	$(function(){
+		var winHeight = $(window).height();
+		var topHeight = $('#top').height();
+		var botHeight = $('#down_refash').height();
+		var io = new IntersectionObserver(function(entry){
+			if(times%2 === 0){
+				loadData();
+			}
+			times++;
+		});
+		console.log(topHeight+','+botHeight);
+		$('#content').css({'min-height':winHeight-topHeight+10+'px'});
+		loadData();
+		io.observe(document.getElementById('down_refash'));
+	});
+
+	function loadData(){
+		start += count;
+		count = 6;
+		var itemTpl = $.ajax({
+			type: 'get',
+			url:'https:\/\/api.douban.com\/v2\/movie\/top250',
+			data: {
+				"start": start,
+				"count": count
+			},
+			dataType: 'jsonp',
+			success: function(data) {
+				console.log(data);
+				var moves = data;
+				var html = template('item',moves);
+				$('#content').append(html);
+				if($('#down_refash').is(':hidden')){
+					$('#down_refash').show();
+				}
+			}
+		});
+		
+	}
+
+</script>
+</body>
+</html>
